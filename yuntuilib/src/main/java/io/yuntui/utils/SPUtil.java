@@ -35,15 +35,15 @@ public class SPUtil {
         return sharedPreferences;
     }
 
-    public void saveModel(String content) {
+    public void saveModel(String appKey, String content) {
         if(getSPreferences() != null) {
-            getSPreferences().edit().putString(YUNTUI_MODEL, content).apply();
+            getSPreferences().edit().putString(YUNTUI_MODEL + new StringBuffer(appKey).reverse().toString(), content).apply();
         }
     }
 
-    public String getModel() {
+    public String getModel(String appKey) {
         if(getSPreferences() != null) {
-            return getSPreferences().getString(YUNTUI_MODEL, "");
+            return getSPreferences().getString(YUNTUI_MODEL + new StringBuffer(appKey).reverse().toString(), "");
         }
 
         return "";
