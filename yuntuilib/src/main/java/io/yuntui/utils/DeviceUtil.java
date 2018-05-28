@@ -58,6 +58,7 @@ public class DeviceUtil {
      */
     public static String getDeviceId(Context context) {
         if(context != null) {
+            // TODO
             TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
             String deviceId = "";
             try {

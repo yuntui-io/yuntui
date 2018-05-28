@@ -43,7 +43,7 @@ public class Yuntui {
         dataManager.appKey = appKey;
         context = ctx.getApplicationContext();
 
-        dataManager.loadDateFromFile();
+        dataManager.loadDateFromFile(appKey);
         Map<String, Object> sysProperties = new HashMap<String, Object>();
         sysProperties.put("platform", "android");
         sysProperties.put("osVersion", DeviceUtil.getOsVersion());
@@ -142,17 +142,17 @@ public class Yuntui {
     }
 
     // TODO
-    private void handleOpenApp() {
+    public void handleOpenApp() {
         sessionId = UUID.randomUUID().toString();
         logEvent("@open_app");
     }
 
     // TODO
-    private void handleCloseApp() {
+    public void handleCloseApp() {
         logEvent("@close_app");
         updateUser();
         pushEvents();
-        dataManager.persistDataToFile();
+        dataManager.persistDataToFile(appKey);
         pushPayload = new HashMap<String, Object>();
     }
 }

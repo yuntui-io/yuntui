@@ -40,8 +40,8 @@ class DataManager {
         this.events.addAll(events);
     }
 
-    void loadDateFromFile() {
-        String modelContent = SPUtil.getInstance().getModel();
+    void loadDateFromFile(String appKey) {
+        String modelContent = SPUtil.getInstance().getModel(appKey);
         if(!TextUtils.isEmpty(modelContent)) {
             //Model model = JSON.toObject(modelContent, Model.class);
             Model model = JSON.fromJson(modelContent, Model.class);
@@ -51,13 +51,13 @@ class DataManager {
 
     }
 
-    void persistDataToFile() {
+    void persistDataToFile(String appKey) {
         Model model = new Model();
         model.user = user;
         model.events = events;
         //String conent = JSON.toString(model);
         String conent = JSON.toJson(model);
-        SPUtil.getInstance().saveModel(conent);
+        SPUtil.getInstance().saveModel(appKey, conent);
     }
 
     private static class Model {
