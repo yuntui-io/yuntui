@@ -122,8 +122,7 @@ public class Yuntui {
                     String jsonString = response.body().string();
 
                     Network.ResponseBody responseBody = JSON.fromJson(jsonString, Network.ResponseBody.class);
-                    int userId = Integer.parseInt(responseBody.data.toString());
-                    dataManager.currentUser().userId = userId;
+                    dataManager.currentUser().userId = (int) Float.parseFloat(responseBody.data.toString());
                 }
             });
         } catch (Exception e) {
