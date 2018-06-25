@@ -1,6 +1,9 @@
 package io.yuntui;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -34,9 +37,25 @@ public class Yuntui {
 
     private String sessionId = UUID.randomUUID().toString();
 
-    private Map<String, Object> pushPayload = new HashMap<String, Object>();
+    private Map<String, Object> pushPayload = new HashMap<>();
 
     public static Context context;
+
+    private static final int MSG_SEND = 1;
+
+    private static class MyHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == MSG_SEND) {
+                shared.pushEvents();
+            }
+        }
+    }
+
+    private Handler handler;
+
+    private static final long INTERVAL = 5 * 60 * 1000; //5min
+    private static final int MAX_NUM = 50;
 
     private Yuntui() {
 
@@ -61,7 +80,8 @@ public class Yuntui {
         if (dataManager.currentUser().userId == 0) {
             createUser();
         }
-
+        this.handler = new MyHandler();
+        this.handler.sendEmptyMessage(MSG_SEND);
     }
 
     public void setUserProperties(Map<String, Object> properties) {
@@ -92,6 +112,8 @@ public class Yuntui {
         logEvent(name, new HashMap<String, Object>());
     }
 
+    private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
     public void logEvent(String name, Map<String, Object> properties) {
         Event event = new Event();
         event.sessionId = sessionId;
@@ -99,10 +121,15 @@ public class Yuntui {
         event.eventName = name;
         properties.putAll(pushPayload);
         event.eventProperties = properties;
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         event.eventTime = formatter.format(new Date());
         dataManager.addEvents(Arrays.asList(event));
-        pushEvents();
+        //pushEvents();
+        handler.removeCallbacksAndMessages(null);
+        if (dataManager.getEventCount() >= MAX_NUM) {
+            handler.sendEmptyMessage(MSG_SEND);
+        } else {
+            handler.sendEmptyMessageDelayed(MSG_SEND, INTERVAL);
+        }
     }
 
     private void createUser() {
