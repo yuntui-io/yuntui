@@ -1,5 +1,7 @@
 package io.yuntui;
 
+import android.util.Log;
+
 import io.yuntui.utils.JSON;
 import okhttp3.*;
 
@@ -14,13 +16,12 @@ class Network {
     private static final String SERVER_HOST = "http://autopushapi.bxapp.cn";
 
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-
+    private static final String TAG = "Network";
     String appKey;
 
     OkHttpClient client = new OkHttpClient();
 
-
-    Object post(String path, Object body) throws IOException {
+    void post(String path, Object body, Callback callback) throws IOException {
         String url = SERVER_HOST + path;
         RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, JSON.toJson(body));
 
@@ -31,19 +32,24 @@ class Network {
                 .post(requestBody)
                 .build();
 
-        Response response = client.newCall(request).execute();
-        if (response.code() != 200) {
-            throw new IOException();
-        }
-//        System.out.println(response.body().string());
+        client.newCall(request).enqueue(callback);
+    }
 
-        String jsonString = response.body().string();
-        //ResponseBody responseBody = JSON.toObject(jsonString, ResponseBody.class);
-        ResponseBody responseBody = JSON.fromJson(jsonString, ResponseBody.class);
-        if (responseBody.code != 200) {
-            throw new IOException();
-        }
-        return responseBody.data;
+    void post(String path, Object body) throws IOException {
+        post(path, body, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Request on fail:" + call.request().toString());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) {
+                if (response == null || response.code() != 200) {
+                    Log.e(TAG, "Request on fail:" + call.request().toString());
+                }
+            }
+        });
     }
 
     static class ResponseBody {

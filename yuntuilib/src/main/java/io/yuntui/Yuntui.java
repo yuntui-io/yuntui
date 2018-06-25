@@ -2,6 +2,7 @@ package io.yuntui;
 
 import android.content.Context;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -13,6 +14,10 @@ import java.util.UUID;
 import io.yuntui.model.Event;
 import io.yuntui.model.User;
 import io.yuntui.utils.DeviceUtil;
+import io.yuntui.utils.JSON;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 /**
  * Created by leo on 2018/4/4.
@@ -76,7 +81,7 @@ public class Yuntui {
             return;
         }
         pushPayload = (Map<String, Object>) payload.get("@yuntui");
-        for (Event event: dataManager.events) {
+        for (Event event : dataManager.events) {
             if (event.sessionId.equals(sessionId)) {
                 event.eventProperties.putAll(pushPayload);
             }
@@ -106,12 +111,25 @@ public class Yuntui {
             return;
         }
         try {
-            Object result = network.post("/api/v1/user/create", user);
-            int userId = Integer.parseInt(result.toString());
-            dataManager.currentUser().userId = userId;
+            network.post("/api/v1/user/create", user, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String jsonString = response.body().string();
+
+                    Network.ResponseBody responseBody = JSON.fromJson(jsonString, Network.ResponseBody.class);
+                    int userId = Integer.parseInt(responseBody.data.toString());
+                    dataManager.currentUser().userId = userId;
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     private void updateUser() {

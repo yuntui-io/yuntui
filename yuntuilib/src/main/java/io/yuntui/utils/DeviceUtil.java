@@ -7,7 +7,6 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 /**
@@ -26,7 +25,7 @@ public class DeviceUtil {
      * 获取系统包名
      */
     public static String getPackageName(Context context) {
-        if(context != null) {
+        if (context != null) {
             return context.getPackageName();
         }
 
@@ -37,7 +36,7 @@ public class DeviceUtil {
      * 获取应用版本名称，非versioncode
      */
     public static String getVersionName(Context context) {
-        if(context != null) {
+        if (context != null) {
             try {
                 PackageManager packageManager = context.getPackageManager();
                 PackageInfo packInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
@@ -57,7 +56,7 @@ public class DeviceUtil {
      * @return
      */
     public static String getDeviceId(Context context) {
-        if(context != null) {
+        if (context != null) {
             // TODO
             TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
             String deviceId = "";
@@ -66,7 +65,7 @@ public class DeviceUtil {
             } catch (SecurityException e) {
                 e.printStackTrace();
             }
-            if(!TextUtils.isEmpty(deviceId)) {
+            if (!TextUtils.isEmpty(deviceId)) {
                 return deviceId;
             }
         }
