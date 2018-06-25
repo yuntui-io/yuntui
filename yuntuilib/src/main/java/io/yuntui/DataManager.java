@@ -30,10 +30,14 @@ class DataManager {
     }
 
     List<Event> popAllEvents() {
-        List<Event> result = new ArrayList<Event>();
+        List<Event> result = new ArrayList<>();
         result.addAll(events);
         events.clear();
         return result;
+    }
+
+    int getEventCount() {
+        return events.size();
     }
 
     void addEvents(List<Event> events) {
@@ -42,7 +46,7 @@ class DataManager {
 
     void loadDateFromFile(String appKey) {
         String modelContent = SPUtil.getInstance().getModel(appKey);
-        if(!TextUtils.isEmpty(modelContent)) {
+        if (!TextUtils.isEmpty(modelContent)) {
             //Model model = JSON.toObject(modelContent, Model.class);
             Model model = JSON.fromJson(modelContent, Model.class);
             user = model.user;

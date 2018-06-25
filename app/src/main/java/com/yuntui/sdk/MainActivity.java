@@ -13,10 +13,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Yuntui yuntui = Yuntui.shared;
-
-        yuntui.setup("test_app_key", getApplicationContext());
-        yuntui.logEvent("@open_app", new HashMap<String, Object>());
+        Yuntui.shared.logEvent("@open_mainActivity", new HashMap<String, Object>());
     }
 }
