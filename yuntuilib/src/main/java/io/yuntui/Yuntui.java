@@ -1,12 +1,16 @@
 package io.yuntui;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,7 +29,7 @@ import okhttp3.Response;
 /**
  * Created by leo on 2018/4/4.
  */
-public class Yuntui {
+public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     public static Yuntui shared = new Yuntui();
 
@@ -41,6 +45,49 @@ public class Yuntui {
 
     public static Context context;
 
+    private ArrayList<Activity> activities = new ArrayList<>();
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle bundle) {
+        if (activities.size() == 0) {
+            handleOpenApp();
+        }
+        activities.add(activity);
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityPaused(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+        activities.remove(activity);
+        if (activities.size() == 0) {
+            handleCloseApp();
+        }
+    }
+
     private static final int MSG_SEND = 1;
 
     private static class MyHandler extends Handler {
@@ -52,16 +99,17 @@ public class Yuntui {
         }
     }
 
+
     private Handler handler;
 
     private static final long INTERVAL = 5 * 60 * 1000; //5min
-    private static final int MAX_NUM = 50;
+    private static final int MAX_NUM = 1;
 
     private Yuntui() {
 
     }
 
-    public void setup(String appKey, Context ctx) {
+    public void setup(String appKey, Application ctx) {
         this.appKey = appKey;
         network.appKey = appKey;
         dataManager.appKey = appKey;
@@ -82,6 +130,7 @@ public class Yuntui {
         }
         this.handler = new MyHandler();
         this.handler.sendEmptyMessage(MSG_SEND);
+        ctx.registerActivityLifecycleCallbacks(this);
     }
 
     public void setUserProperties(Map<String, Object> properties) {
@@ -185,18 +234,16 @@ public class Yuntui {
         }
     }
 
-    // TODO
-    public void handleOpenApp() {
+    private void handleOpenApp() {
         sessionId = UUID.randomUUID().toString();
+        dataManager.loadDateFromFile(appKey);
         logEvent("@open_app");
     }
 
-    // TODO
-    public void handleCloseApp() {
+    private void handleCloseApp() {
         logEvent("@close_app");
         updateUser();
-        pushEvents();
         dataManager.persistDataToFile(appKey);
-        pushPayload = new HashMap<String, Object>();
+        pushPayload = new HashMap<>();
     }
 }

@@ -23,7 +23,8 @@ class Network {
 
     void post(String path, Object body, Callback callback) throws IOException {
         String url = SERVER_HOST + path;
-        RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, JSON.toJson(body));
+        String content = JSON.toJson(body);
+        RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, content);
 
         Request request = new Request.Builder()
                 .header("X-AppKey", appKey)
@@ -33,6 +34,7 @@ class Network {
                 .build();
 
         client.newCall(request).enqueue(callback);
+        Log.d(TAG, "Send:Path = " + path + ",body = " + content);
     }
 
     void post(String path, Object body) throws IOException {
