@@ -1,9 +1,14 @@
 package io.yuntui.utils;
 
+import android.Manifest;
+import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Process;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -56,21 +61,28 @@ public class DeviceUtil {
      * @return
      */
     public static String getDeviceId(Context context) {
-        if (context != null) {
-            // TODO
-            TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            String deviceId = "";
-            try {
-                deviceId = tm.getDeviceId();
-            } catch (SecurityException e) {
-                e.printStackTrace();
-            }
-            if (!TextUtils.isEmpty(deviceId)) {
-                return deviceId;
-            }
+        String deviceId = SPUtil.getInstance().getDeviceId();
+        if (TextUtils.isEmpty(deviceId)) {
+            deviceId = generateDeviceId(context);
+            SPUtil.getInstance().setDeviceId(deviceId);
         }
 
-        return UUID.randomUUID().toString();
+        return deviceId;
     }
 
+    private static String generateDeviceId(Context context) {
+        if (context == null) {
+            return UUID.randomUUID().toString();
+        }
+        try {
+            TelephonyManager tel = (TelephonyManager) context.getSystemService(
+                    Context.TELEPHONY_SERVICE);
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                return tel.getDeviceId();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return UUID.randomUUID().toString();
+    }
 }
