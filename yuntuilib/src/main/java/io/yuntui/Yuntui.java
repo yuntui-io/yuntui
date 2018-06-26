@@ -5,12 +5,10 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,19 +43,18 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     public static Context context;
 
-    private ArrayList<Activity> activities = new ArrayList<>();
+    private int aliveActivityCount = 0;
 
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle) {
-        if (activities.size() == 0) {
-            handleOpenApp();
-        }
-        activities.add(activity);
     }
 
     @Override
     public void onActivityStarted(Activity activity) {
-
+        if (aliveActivityCount == 0) {
+            handleOpenApp();
+        }
+        aliveActivityCount++;
     }
 
     @Override
@@ -72,7 +69,12 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityStopped(Activity activity) {
-
+        if (aliveActivityCount > 0) {
+            aliveActivityCount--;
+        }
+        if (aliveActivityCount == 0) {
+            handleCloseApp();
+        }
     }
 
     @Override
@@ -82,10 +84,6 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityDestroyed(Activity activity) {
-        activities.remove(activity);
-        if (activities.size() == 0) {
-            handleCloseApp();
-        }
     }
 
     private static final int MSG_SEND = 1;
@@ -242,6 +240,7 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     private void handleCloseApp() {
         logEvent("@close_app");
+        handler.removeCallbacksAndMessages(null);
         updateUser();
         dataManager.persistDataToFile(appKey);
         pushPayload = new HashMap<>();
