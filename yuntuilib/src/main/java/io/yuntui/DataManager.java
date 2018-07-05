@@ -3,6 +3,7 @@ package io.yuntui;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.yuntui.model.Event;
@@ -19,7 +20,7 @@ class DataManager {
 
     private User user = new User();
 
-    List<Event> events = new ArrayList();
+    List<Event> events = Collections.synchronizedList(new ArrayList<Event>());
 
     User currentUser() {
         return user;
@@ -47,10 +48,9 @@ class DataManager {
     void loadDateFromFile(String appKey) {
         String modelContent = SPUtil.getInstance().getModel(appKey);
         if (!TextUtils.isEmpty(modelContent)) {
-            //Model model = JSON.toObject(modelContent, Model.class);
             Model model = JSON.fromJson(modelContent, Model.class);
             user = model.user;
-            events = model.events;
+            events = Collections.synchronizedList(model.events);
         }
 
     }
@@ -59,9 +59,8 @@ class DataManager {
         Model model = new Model();
         model.user = user;
         model.events = events;
-        //String conent = JSON.toString(model);
-        String conent = JSON.toJson(model);
-        SPUtil.getInstance().saveModel(appKey, conent);
+        String content = JSON.toJson(model);
+        SPUtil.getInstance().saveModel(appKey, content);
     }
 
     private static class Model {

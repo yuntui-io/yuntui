@@ -21,7 +21,7 @@ class Network {
 
     OkHttpClient client = new OkHttpClient();
 
-    void post(String path, Object body, Callback callback) throws IOException {
+    void post(String path, Object body, Callback callback) {
         String url = SERVER_HOST + path;
         String content = JSON.toJson(body);
         RequestBody requestBody = RequestBody.create(MEDIA_TYPE_JSON, content);
@@ -37,22 +37,6 @@ class Network {
         Log.d(TAG, "Send:Path = " + path + ",body = " + content);
     }
 
-    void post(String path, Object body) throws IOException {
-        post(path, body, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-                Log.e(TAG, "Request on fail:" + call.request().toString());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) {
-                if (response == null || response.code() != 200) {
-                    Log.e(TAG, "Request on fail:" + call.request().toString());
-                }
-            }
-        });
-    }
 
     static class ResponseBody {
         public int code;

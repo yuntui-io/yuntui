@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -121,7 +122,7 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
         sysProperties.put("appVersion", DeviceUtil.getVersionName(context));
 
         dataManager.currentUser().sysProperties = sysProperties;
-        dataManager.currentUser().deviceId = DeviceUtil.getDeviceId(context);//"59FB402C-578D-40CA-AE29-C0D03463870D"; // TODO
+        dataManager.currentUser().deviceId = DeviceUtil.getDeviceId(context);
 
         if (dataManager.currentUser().userId == 0) {
             createUser();
@@ -137,6 +138,7 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
     public void setPushId(String pushId) {
         dataManager.currentUser().pushId = pushId;
+        updateUser();
     }
 
     public void setAppUserId(String appUserId) {
@@ -159,7 +161,6 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
         logEvent(name, new HashMap<String, Object>());
     }
 
-    private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     public void logEvent(String name, Map<String, Object> properties) {
         Event event = new Event();
@@ -168,9 +169,9 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
         event.eventName = name;
         properties.putAll(pushPayload);
         event.eventProperties = properties;
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         event.eventTime = formatter.format(new Date());
         dataManager.addEvents(Arrays.asList(event));
-        //pushEvents();
         handler.removeCallbacksAndMessages(null);
         if (dataManager.getEventCount() >= MAX_NUM) {
             handler.sendEmptyMessage(MSG_SEND);
@@ -184,24 +185,23 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
         if (user.userId != 0) {
             return;
         }
-        try {
-            network.post("/api/v1/user/create", user, new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    e.printStackTrace();
-                }
 
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
+        network.post("/api/v1/user/create", user, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response != null && response.code() != 200) {
                     String jsonString = response.body().string();
-
                     Network.ResponseBody responseBody = JSON.fromJson(jsonString, Network.ResponseBody.class);
                     dataManager.currentUser().userId = (int) Float.parseFloat(responseBody.data.toString());
                 }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            }
+        });
+
 
     }
 
@@ -210,39 +210,56 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
         if (user.userId == 0) {
             return;
         }
-        try {
-            network.post("/api/v1/user/update", user);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        network.post("/api/v1/user/update", user, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) {
+
+            }
+        });
     }
 
     private void pushEvents() {
         if (dataManager.currentUser().userId == 0) {
             return;
         }
-        List<Event> events = dataManager.popAllEvents();
+        final List<Event> events = dataManager.popAllEvents();
         if (events.size() == 0) {
             return;
         }
-        try {
-            network.post("/api/v1/event/create", events);
-        } catch (Exception e) {
-            dataManager.addEvents(events);
-        }
+        network.post("/api/v1/event/create", events, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dataManager.addEvents(events);
+                dataManager.persistDataToFile(appKey);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) {
+                if (response == null || response.code() != 200) {
+                    dataManager.addEvents(events);
+                    dataManager.persistDataToFile(appKey);
+                }
+            }
+        } );
+
     }
 
     private void handleOpenApp() {
         sessionId = UUID.randomUUID().toString();
-        dataManager.loadDateFromFile(appKey);
         logEvent("@open_app");
     }
 
     private void handleCloseApp() {
         logEvent("@close_app");
         handler.removeCallbacksAndMessages(null);
-        updateUser();
         dataManager.persistDataToFile(appKey);
+        updateUser();
+        pushEvents();
         pushPayload = new HashMap<>();
     }
 }
