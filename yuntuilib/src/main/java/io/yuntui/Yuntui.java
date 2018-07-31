@@ -194,7 +194,7 @@ public class Yuntui implements Application.ActivityLifecycleCallbacks {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response != null && response.code() != 200) {
+                if (response != null && response.code() == 200) {
                     String jsonString = response.body().string();
                     Network.ResponseBody responseBody = JSON.fromJson(jsonString, Network.ResponseBody.class);
                     dataManager.currentUser().userId = (int) Float.parseFloat(responseBody.data.toString());
